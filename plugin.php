@@ -9,17 +9,18 @@ Author URI: http://rjzaworski.com/
 
 if (!class_exists('Plugin')):
 
-require('plugin/get_simple_plugin.php');
+require_once('plugin/get_simple_plugin.php');
 
 class Plugin extends GetSimplePlugin {
 
 	protected
-/*
-The very simplest plugins will still need to specify a few fields in the `$_info` array.
-
-*/
+		
+		/**
+		 *	The very simplest plugins will still need to specify 
+		 *	a few fields in the `$_info` array.
+		 */
 		$_defaults = array(
-			'to' => 'mailbag@example.com'
+			'email' => 'mailbag@example.com'
 		),
 
 		$_actions = array(
@@ -43,7 +44,7 @@ The very simplest plugins will still need to specify a few fields in the `$_info
 			'version' =>        '1.0',
 			'author' =>         'RJ Zaworski <rj@rjzaworski.com>',
 			'author_website' => 'http://rjzaworski.com/', 
-			'description' =>    'A Very Simple Contact Form',
+			'description' =>    'A Contact Link',
 			'page_type' =>      'theme',
 			'menu_callback' =>  'admin_view'
 		);
@@ -57,7 +58,7 @@ The very simplest plugins will still need to specify a few fields in the `$_info
 	 *	@callback
 	 */
 	public function admin_menu () {
-		createSideMenu($this->_info['id'], 'Contact Form');
+		createSideMenu($this->_info['id'], 'Contact Link');
 	}
 
 	/**
@@ -70,16 +71,15 @@ The very simplest plugins will still need to specify a few fields in the `$_info
 
 		if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
+			$action = $_POST['_action'];
 			$data['action'] = $action;
-
+			
 			// Obligatory CSRF check
 			if (check_nonce($_POST['_nonce'], $action, $this->_info['id'])) {
 
-				$action = $_POST['_action'];
-
 				// Take action!
 				switch ($action) {
-				case 'send':
+				case 'save':
 					if ($this->_save($_POST)) {
 						$data['updated'] = 'Settings saved';
 					} else {
@@ -97,7 +97,7 @@ The very simplest plugins will still need to specify a few fields in the `$_info
 	}
 
 	/**
-	 *	Callback attached to `content` filter: replace calendar tag with calendar
+	 *	Callback attached to `content` filter: replace contact tag with content 
 	 *	@param	string	$content to filter
 	 *	@param	string	filtered content
 	 */
@@ -109,8 +109,8 @@ The very simplest plugins will still need to specify a few fields in the `$_info
 			return $content;
 		}
 
-		// load contact form
-		$contact_form = $this->_load_view('form', array(), false);
+		$email = $this->_settings['email'];
+		$mailto = "<a href=\"mailto:$email\">$email</a>";
 
 		return str_replace($content, $key, $contact_form);
 	}

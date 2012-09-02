@@ -2,6 +2,10 @@
 
 if (!class_exists('GetSimplePlugin')):
 
+if (!defined('GS_NULL')) {
+	define('GS_NULL', '\0');
+}
+
 class GetSimplePlugin {
 
 	protected
@@ -76,6 +80,52 @@ class GetSimplePlugin {
 	}
 
 	/**
+	*	Get or set a plugin setting
+	*
+	*	If an `array` is passed for the `$key` parameter, all
+	*	key-value pairs included in the array that are included
+	*	in the `$_defaults` whitelist will be assigned.
+	*
+	*	@param	mixed	$key to retrieve or set 
+	*	@param	string	(optional) $value to assign
+	*	@return	string	value assigned to $key
+	*/
+	public function setting ($key, $value = GS_NULL) {
+
+		if (is_array($key)) {
+
+			$settings = $key;
+			$whitelist = array_keys($this->_defaults);
+
+			foreach ($whitelist as $key) {
+				if (array_key_exists($key, $settings)) {
+				$this->_settings[$key] = $settings[$key];
+				}
+			}
+
+			$this->_save();
+
+		} else if ($value != GS_NULL) {
+
+			// setter
+			$this->_settings[$key] = $value;
+			$this->_save();
+			return $value;
+
+		} else {
+
+			// getter
+			if (isset($this->_settings[$key])) {
+				return $this->_settings[$key];
+			} elseif (isset($this->_defaults[$key])) {
+				return $this->_defaults[$key];
+			}
+		}
+
+		return NULL;
+	}
+
+	/**
 	 *	Return an underscorized version of the plugin id
 	 *	@return	string
 	 */
@@ -125,15 +175,11 @@ class GetSimplePlugin {
 	 */
 	protected function _load_view( $view, $data = null, $echo = true ) {
 
-//		$viewfile = array_pop(explode('/', get_theme_url(false)));
+		$view = $view . '.php';
+		$viewfile = $this->_plugin_dir() . '/views/' . $view;
 
 		if (!file_exists($viewfile)) {
-			$view = $view . '.php';
-			$viewfile = $this->_plugin_dir() . '/views/' . $view;
-
-			if (!file_exists($viewfile)) {
-				echo 'couldn\'t load view';
-			}
+			echo "couldn't load view: '$view'";
 		}
 
 		if (!is_array($data)) {
@@ -233,21 +279,22 @@ class GetSimplePlugin {
 	 */
 	protected function _register () {
 
-		if (isset($this->_info['menu_callback'])) {
-			$callback = array($this, $this->_info['menu_callback']);
-		}
-
-		// register plugin
-		register_plugin(
+		$plugininfo = array(
 			$this->_info['id'],
 			$this->_info['name'],
 			$this->_info['version'],
 			$this->_info['author'],
 			$this->_info['author_website'],
 			$this->_info['description'], 
-			$this->_info['page_type'],
-			$callback
+			$this->_info['page_type']
 		);
+
+		if (isset($this->_info['menu_callback'])) {
+			$plugininfo[] = array($this, $this->_info['menu_callback']);
+		}
+
+		// register plugin
+		call_user_func_array('register_plugin', $plugininfo);
 
 		// register actions
 		foreach ($this->_actions as $hook => $action) {
@@ -282,4 +329,3 @@ class GetSimplePlugin {
 }
 
 endif; // GetSimplePlugin
-
