@@ -8,6 +8,8 @@ if (!defined('GS_NULL')) {
 
 class GetSimplePlugin {
 
+	const version = '0.5.0';
+
 	protected
 
 		/**
