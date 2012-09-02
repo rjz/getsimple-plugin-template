@@ -1,8 +1,12 @@
 getsimple-plugin-template
 =========================
 
-A boilerplate template for authoring GetSimple plugins
+A boilerplate template for authoring GetSimple plugins that provides:
 
+* Declarative actions, filters, styles, and scripts
+* Plugin defaults and settings
+* Data templating via `load_view` method
+* URL- and path-related route helpers
 
 ###Testing
 
